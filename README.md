@@ -11,26 +11,33 @@ docker build . -t <YOUR DOCKERHUB USERNAME>/nodejs6action-git
 docker push <YOUR DOCKERHUB USERNAME>/nodejs6action-git
 ```
 
-4. Zip up the `deploy.js`, `package.json`, and `wskdeploy` files with:
+### Automatic deploy
+1. Run `./deploy.sh` either using the defaults (look inside `deploy.sh`), and if you need custom naming you can input them as arguments, like below:
 
 ```
-zip action.zip deploy.js package.json wskdeploy
+./deploy.sh <OW_ACTION_NAME> <ACTION_ZIP> <OW_ACTION_DOCKER_IMAGE> <OW_HOST> <OW_AUTH>
 ```
 
-5. Deploy it to OpenWhisk by running:
+### Manual deploy
+
+1. Zip up the `deploy.js`, `package.json`, and `wskdeploy` files with:
+
+```
+cd action
+zip -r ../action.zip *
+```
+
+2. Deploy it to OpenWhisk by running:
 
 ```
 wsk action update my-wskdeploy-action action.zip --docker <YOUR DOCKERHUB USERNAME>/nodejs6action-git
 ```
 
-6. Invoke it with the following syntax
+3. Invoke it with the following syntax
 
 ```
-wsk action invoke my-wskdeploy-action -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint -r
+wsk action invoke my-wskdeploy-action -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint> -r
 ```
 
 * Note: the `-r` flag tells OpenWhisk to wait and return you the response.
 
-
-## TODO:
-1. Create `deploy.sh` script to simplify the process of zipping, updating, and deploying the action
