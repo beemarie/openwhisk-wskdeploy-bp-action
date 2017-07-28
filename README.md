@@ -33,7 +33,8 @@ zip -r ../action.zip *
 wsk action update my-wskdeploy-action action.zip --docker <YOUR DOCKERHUB USERNAME>/nodejs6action-git
 ```
 
-3. Invoke it with the following syntax
+### Invoking the action
+1. Invoke it with the following syntax
 
 ```
 wsk action invoke my-wskdeploy-action -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint> -r
