@@ -37,7 +37,7 @@ bx wsk action update my-wskdeploy-action action.zip --docker <YOUR DOCKERHUB USE
 1. Invoke it with the following syntax
 
 ```
-bx wsk action invoke my-wskdeploy-action -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint -r
+bx wsk action invoke my-wskdeploy-action -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint> -r
 ```
 
 * Note: the `-r` flag tells OpenWhisk to wait and return you the response.
