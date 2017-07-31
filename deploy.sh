@@ -21,7 +21,7 @@ fi
 
 # Update (or create) and deploy action
 echo Deploying OpenWhisk action $OW_ACTION_NAME with content of ${ACTION_ZIP} using image $OW_ACTION_DOCKER_IMAGE to host $OW_HOST
-wsk action update ${OW_ACTION_NAME} ${ACTION_ZIP} --docker ${OW_ACTION_DOCKER_IMAGE}
+bx wsk action update ${OW_ACTION_NAME} ${ACTION_ZIP} --docker ${OW_ACTION_DOCKER_IMAGE}
 echo Action successfully deployed
 echo Invoke action using:
-echo "wsk action invoke ${OW_ACTION_NAME} -r -p user <GH_USER_NAME> -p pass <GH_ACCESS_TOKEN> -p repo <GH_REPO_URL>"
+echo "bx wsk action invoke ${OW_ACTION_NAME} -r -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GH_USER_NAME> -p pass <GH_ACCESS_TOKEN> -p repo <GH_REPO_URL>"

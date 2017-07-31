@@ -15,32 +15,106 @@ function main(params) {
     }
 
     const remote = remoteOrError;
+
+    // Grab wskAuth and apihost for wskdeploy command
+    const {
+      wskAuth,
+      wskApiHost
+    } = params;
+
     // Extract the name of the repo for the tmp directory
     const repoSplit = params.repo.split('/');
     const repoName = repoSplit[repoSplit.length - 1];
 
     // Make the async call to simple-git to clone the repo
+    // @TODO: Add optimization/caching here if repo exists on invoker already
     return git()
-      .clone(remote, `${__dirname}/tmp/${repoName}`, (err, data) => {
+      .clone(remote, `${__dirname}/tmp/${repoName}`, (err) => {
         if (err) {
           console.log('Error cloning remote ', err);
-          reject(err)
+          reject(err);
         }
-        resolve(data)
-      })
-
+        resolve({
+          repoDir: `${__dirname}/tmp/${repoName}`,
+          wskAuth,
+          wskApiHost,
+        });
+      });
   })
   .then((data) => {
-    console.log('Successfully cloned repo')
-
+    console.log('Creating config file for wskdeploy');
+    const {
+      wskAuth,
+      wskApiHost
+    } = data;
     return new Promise(function(resolve, reject) {
-      exec('ls', { cwd: __dirname }, (err, data) => {
+      exec(`echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops && cat .wskprops`, {
+        cwd: `/root/`
+      }, (err, stdout, stderr) => {
+        if (err) {
+          console.log('Error creating .wskdeploy props', err);
+          reject(err);
+        }
+        if (stdout) {
+          console.log('stdout: ');
+          console.log(stdout);
+        }
+        if (stderr) {
+          console.log('stderr: ');
+          console.log(stderr);
+        }
+        resolve(data);
+      }
+    )
+    });
+  })
+  .then((data) => {
+    const { repoDir } = data;
+    return new Promise(function(resolve, reject) {
+      exec(`printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml &> result.txt`, {
+        cwd: __dirname,
+        env : {
+          // CLOUDANT_HOSTNAME: 'FILL ME IN',
+          // CLOUDANT_USERNAME: 'FILL ME IN',
+          // CLOUDANT_PASSWORD: 'FILL ME IN',
+          // CLOUDANT_DATABASE: 'FILL ME IN',
+        }
+      }, (err, stdout, stderr) => {
+        if (err) {
+          console.log('Error running `./wskdeploy`: ', err);
+          reject(err);
+        }
+        if (stdout) {
+          console.log('stdout: ');
+          console.log(stdout);
+        }
+        if (stderr) {
+          console.log('stderr: ');
+          console.log(stderr);
+        }
+        resolve(data);
+      });
+    })
+  })
+  .then((data) => {
+    console.log('Performing LS')
+    return new Promise(function(resolve, reject) {
+      exec('ls', {
+        cwd: __dirname,
+      }, (err, stdout, stderr) => {
         if (err) {
           console.log('Error running `ls`: ', err);
           reject(err);
         }
-        console.log('LS result is: ')
-        console.log(data);
+        console.log('ls result is: ')
+        if (stdout) {
+          console.log('stdout: ');
+          console.log(stdout);
+        }
+        if (stderr) {
+          console.log('stderr: ');
+          console.log(stderr);
+        }
         resolve(data);
       });
     })
@@ -69,11 +143,13 @@ function convertParamsToRemote(params) {
   const {
     user,
     pass,
-    repo
+    repo,
+    wskAuth,
+    wskApiHost,
   } = params;
-  if (!user || !pass || !repo) {
+  if (!user || !pass || !repo || !wskAuth || !wskApiHost) {
     return {
-      error: 'ERROR: Please enter username, password, and repo as params',
+      error: 'ERROR: Please enter wskAuth, wskApiHost, username, password, and repo as params',
     };
   } else {
     return `https://${user}:${pass}@${repo}`;
