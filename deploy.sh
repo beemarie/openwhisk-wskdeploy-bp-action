@@ -24,4 +24,4 @@ echo Deploying OpenWhisk action $OW_ACTION_NAME with content of ${ACTION_ZIP} us
 bx wsk action update ${OW_ACTION_NAME} ${ACTION_ZIP} --docker ${OW_ACTION_DOCKER_IMAGE}
 echo Action successfully deployed
 echo Invoke action using:
-echo "bx wsk action invoke ${OW_ACTION_NAME} -r -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GH_USER_NAME> -p pass <GH_ACCESS_TOKEN> -p repo <GH_REPO_URL>"
+echo "bx wsk action invoke ${OW_ACTION_NAME} -r -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GH_USER_NAME> -p pass <GH_ACCESS_TOKEN> -p repo <GH_REPO_URL> -p envData <JSON of env needed for wskdeploy, i.e. '{\"CLOUDANT_HOSTNAME\":\"MY_CLOUDANT_HOSTNAME\"}'>"

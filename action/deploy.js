@@ -1,6 +1,7 @@
 var fs = require('fs');
 var exec = require('child_process').exec;
 const git = require('simple-git');
+let command = '';
 
 function main(params) {
   return new Promise(function(resolve, reject) {
@@ -19,38 +20,55 @@ function main(params) {
     // Grab wskAuth and apihost for wskdeploy command
     const {
       wskAuth,
-      wskApiHost
+      wskApiHost,
+      envData
     } = params;
 
     // Extract the name of the repo for the tmp directory
     const repoSplit = params.repo.split('/');
     const repoName = repoSplit[repoSplit.length - 1];
+    const localDirName = `${__dirname}/tmp/${repoName}`;
 
-    // Make the async call to simple-git to clone the repo
-    // @TODO: Add optimization/caching here if repo exists on invoker already
-    return git()
-      .clone(remote, `${__dirname}/tmp/${repoName}`, (err) => {
-        if (err) {
-          console.log('Error cloning remote ', err);
-          reject(err);
+    return checkIfDirExists(localDirName)
+      .then((res) => {
+        // The directory does not exist, clone BP from Github
+        if (!res.skipClone) {
+          return git()
+            .clone(remote, localDirName, (err) => {
+              if (err) {
+                console.log('Error cloning remote ', err);
+                reject(err);
+              }
+              resolve({
+                repoDir: localDirName,
+                wskAuth,
+                wskApiHost,
+                envData,
+              });
+            });
+        } else {
+          // The directory exists already, start wskdeploy chain as normal
+          resolve({
+            repoDir: localDirName,
+            wskAuth,
+            wskApiHost,
+            envData,
+          });
         }
-        resolve({
-          repoDir: `${__dirname}/tmp/${repoName}`,
-          wskAuth,
-          wskApiHost,
-        });
       });
   })
   .then((data) => {
     console.log('Creating config file for wskdeploy');
     const {
       wskAuth,
-      wskApiHost
+      wskApiHost,
     } = data;
+
+    // Create a .wskprops in the root for wskdeploy to reference
+    command = `echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops`;
+
     return new Promise(function(resolve, reject) {
-      exec(`echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops && cat .wskprops`, {
-        cwd: `/root/`
-      }, (err, stdout, stderr) => {
+      exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
         if (err) {
           console.log('Error creating .wskdeploy props', err);
           reject(err);
@@ -58,6 +76,9 @@ function main(params) {
         if (stdout) {
           console.log('stdout: ');
           console.log(stdout);
+          console.log('type');
+          console.log(typeof stdout);
+
         }
         if (stderr) {
           console.log('stderr: ');
@@ -69,17 +90,25 @@ function main(params) {
     });
   })
   .then((data) => {
-    const { repoDir } = data;
+    const {
+      repoDir,
+      envData
+    } = data;
+
+    const execOptions = {
+      cwd: __dirname,
+    };
+
+    // If we were passed environment data (Cloudant bindings, etc.) add it to the options for `exec`
+    if (envData) {
+      execOptions.env = envData;
+    }
+
+    // Send 'y' to the wskdeploy command so it will actually run the deployment
+    command = `printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml`;
+
     return new Promise(function(resolve, reject) {
-      exec(`printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml &> result.txt`, {
-        cwd: __dirname,
-        env : {
-          // CLOUDANT_HOSTNAME: 'FILL ME IN',
-          // CLOUDANT_USERNAME: 'FILL ME IN',
-          // CLOUDANT_PASSWORD: 'FILL ME IN',
-          // CLOUDANT_DATABASE: 'FILL ME IN',
-        }
-      }, (err, stdout, stderr) => {
+      exec(command, execOptions, (err, stdout, stderr) => {
         if (err) {
           console.log('Error running `./wskdeploy`: ', err);
           reject(err);
@@ -87,6 +116,24 @@ function main(params) {
         if (stdout) {
           console.log('stdout: ');
           console.log(stdout);
+          console.log('type');
+          console.log(typeof stdout);
+
+          if (typeof stdout === 'string') {
+            try {
+              stdout = JSON.parse(stdout);
+            } catch (e) {
+              console.log('Failed to parse stdout, it wasn\'t a JSON object');
+            }
+          }
+
+          if (typeof stdout === 'object') {
+            if (stdout.error) {
+              console.log('Error: Could not successfully run wskdeploy. Did you provide the needed environment variables?');
+              stdout.descriptiveError = 'Error: Could not successfully run wskdeploy. Did you provide the needed environment variables?';
+              reject(stdout);
+            }
+          }
         }
         if (stderr) {
           console.log('stderr: ');
@@ -98,10 +145,10 @@ function main(params) {
   })
   .then((data) => {
     console.log('Performing LS')
+    command = `ls`;
+
     return new Promise(function(resolve, reject) {
-      exec('ls', {
-        cwd: __dirname,
-      }, (err, stdout, stderr) => {
+      exec(command , { cwd: __dirname }, (err, stdout, stderr) => {
         if (err) {
           console.log('Error running `ls`: ', err);
           reject(err);
@@ -134,10 +181,41 @@ function main(params) {
 }
 
 /**
+ * Checks if the BP directory already exists on this invoker
+ * @TODO: Optimize this to use GH tags so we can see whether or not we still need to pull a new version
+ * @param  {[string]} dirname [string of directory path to check]
+ * @return {[Promise]}        [Whether or not directory exists]
+ */
+function checkIfDirExists(dirname) {
+  return new Promise((resolve, reject) => {
+    fs.stat(dirname, (err, stats) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          console.log(`Directory ${dirname} does not exist`);
+          resolve({
+            skipClone: false
+          });
+        }
+        else {
+          console.log(`Error checking if ${dirname} exists`);
+          console.log(err);
+          reject(err);
+        }
+      }
+      // Directory does exist, skip git clone
+      // @TODO: Add optimization/caching here if repo exists on invoker already
+      resolve({
+        skipClone: true
+      });
+    });
+  });
+}
+
+/**
  * Checks that a GitHub username, password (or access token), and repo
  *  are all passed in the params
- * @param  {Object } params   Params object
- * @return {String || Object} String of remote URL if successful, object if error
+ * @param  {[Object]} params    [Params object]
+ * @return {[String || Object]} [String of remote URL if successful, object if error]
  */
 function convertParamsToRemote(params) {
   const {
