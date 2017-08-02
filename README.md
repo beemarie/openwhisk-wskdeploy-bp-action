@@ -30,14 +30,23 @@ zip -r ../action.zip *
 2. Deploy it to OpenWhisk by running:
 
 ```
-bx wsk action update my-wskdeploy-action action.zip --docker <YOUR DOCKERHUB USERNAME>/nodejs6action-git
+bx wsk action update clone-and-wskdeploy action.zip --docker <YOUR DOCKERHUB USERNAME>/nodejs6action-git
 ```
 
 ### Invoking the action
 1. Invoke it with the following syntax
 
 ```
-bx wsk action invoke my-wskdeploy-action -p wskAuth <WSK AUTH KEY> -p wskApiHost <WSK API HOST> -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL OF BLUEPRINT GITHUB REPO, i.e. github.com/blueprints/my-awesome-blueprint> -p envData <JSON of env needed for wskdeploy, i.e. '{"CLOUDANT_HOSTNAME":"MY_CLOUDANT_HOSTNAME"}'> -r
+bx wsk action invoke clone-and-wskdeploy -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL> [-p wskAuth <WSK AUTH KEY>] [-p wskApiHost <WSK API HOST>] [-p envData <JSON>] -r
 ```
 
 * Note: the `-r` flag tells OpenWhisk to wait and return you the response.
+* Note: `[]` denotes an optional parameter
+* Note: `repo` param should have the structure:
+```
+github.com/blueprints/my-awesome-blueprint
+```
+* Note: `envData` param should have the structure:
+```
+'{"CLOUDANT_HOSTNAME":"MY_CLOUDANT_HOSTNAME"}'
+```

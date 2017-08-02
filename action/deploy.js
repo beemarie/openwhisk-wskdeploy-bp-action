@@ -1,5 +1,5 @@
-var fs = require('fs');
-var exec = require('child_process').exec;
+const fs = require('fs');
+const exec = require('child_process').exec;
 const git = require('simple-git');
 let command = '';
 
@@ -19,10 +19,10 @@ function main(params) {
 
     // Grab wskAuth and apihost for wskdeploy command
     const {
-      wskAuth,
-      wskApiHost,
-      envData
-    } = params;
+      envData,
+     } = params;
+
+    const { wskApiHost, wskAuth } = getWskApiAuth(params);
 
     // Extract the name of the repo for the tmp directory
     const repoSplit = params.repo.split('/');
@@ -225,12 +225,37 @@ function convertParamsToRemote(params) {
     wskAuth,
     wskApiHost,
   } = params;
-  if (!user || !pass || !repo || !wskAuth || !wskApiHost) {
+  if (!user || !pass || !repo) {
     return {
-      error: 'ERROR: Please enter wskAuth, wskApiHost, username, password, and repo as params',
+      error: 'ERROR: Please enter username, password, and repo as params',
     };
   } else {
     return `https://${user}:${pass}@${repo}`;
+  }
+}
+
+/**
+ * Checks if wsk API host and auth were provided in params, if not, gets them from process.env
+ * @param  {[Object]} params    [Params object]
+ * @return {[Object]}           [Object containing wskApiHost and wskAuth]
+ */
+function getWskApiAuth(params) {
+  let {
+    wskApiHost,
+    wskAuth,
+  } = params;
+
+  if (!wskApiHost) {
+    wskApiHost = process.env.__OW_API_HOST;
+  }
+
+  if (!wskAuth) {
+    wskAuth = process.env.__OW_API_KEY;
+  }
+
+  return {
+    wskApiHost,
+    wskAuth,
   }
 }
 
