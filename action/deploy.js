@@ -17,11 +17,10 @@ function main(params) {
 
     const remote = remoteOrError;
 
-    // Grab wskAuth and apihost for wskdeploy command
-    const {
-      envData,
-     } = params;
+    // Grab optional envData for wskdeploy
+    const { envData } = params;
 
+    // Grab wsp api host and auth from params, or process.env
     const { wskApiHost, wskAuth } = getWskApiAuth(params);
 
     // Extract the name of the repo for the tmp directory
