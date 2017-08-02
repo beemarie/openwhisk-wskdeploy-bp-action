@@ -48,5 +48,5 @@ github.com/blueprints/my-awesome-blueprint
 ```
 * Note: `envData` param should have the structure:
 ```
-'{"CLOUDANT_HOSTNAME":"MY_CLOUDANT_HOSTNAME"}'
+'{"CLOUDANT_HOSTNAME":"MY_CLOUDANT_HOSTNAME","CLOUDANT_DB":"MY_CLOUDANT_DB"}'
 ```
