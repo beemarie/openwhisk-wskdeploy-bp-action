@@ -37,7 +37,7 @@ bx wsk action update clone-and-wskdeploy action.zip --docker <YOUR DOCKERHUB USE
 1. Invoke it with the following syntax
 
 ```
-bx wsk action invoke clone-and-wskdeploy -p user <GITHUB USERNAME> -p pass <GITHUB ACCESS TOKEN> -p repo <URL> [-p wskAuth <WSK AUTH KEY>] [-p wskApiHost <WSK API HOST>] [-p envData <JSON>] -r
+bx wsk action invoke clone-and-wskdeploy -p repo <URL> [-p wskAuth <WSK AUTH KEY>] [-p wskApiHost <WSK API HOST>] [-p envData <JSON>] -r
 ```
 
 * Note: the `-r` flag tells OpenWhisk to wait and return you the response.

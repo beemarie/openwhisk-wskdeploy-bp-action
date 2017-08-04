@@ -5,7 +5,6 @@ let command = '';
 
 function main(params) {
   return new Promise(function(resolve, reject) {
-
     // Either build the remote URL for simple-git or build error
     let remoteOrError = convertParamsToRemote(params);
 
@@ -218,18 +217,19 @@ function checkIfDirExists(dirname) {
  */
 function convertParamsToRemote(params) {
   const {
-    user,
-    pass,
     repo,
-    wskAuth,
-    wskApiHost,
   } = params;
-  if (!user || !pass || !repo) {
+  if (!repo) {
     return {
-      error: 'ERROR: Please enter username, password, and repo as params',
+      error: 'ERROR: Please enter the GitHub repo in params',
     };
   } else {
-    return `https://${user}:${pass}@${repo}`;
+    // Check if `https://` was included in the repo, prepend it if not
+    if (repo.indexOf('https://') === 0) {
+      return repo;
+    } else {
+      return `https://${repo}`;
+    }
   }
 }
 
