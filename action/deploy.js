@@ -72,16 +72,16 @@ function main(params) {
           reject(err);
         }
         if (stdout) {
-          console.log('stdout: ');
+          console.log('stdout from creating .wskdeploy props:');
           console.log(stdout);
           console.log('type');
           console.log(typeof stdout);
-
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         }
         if (stderr) {
-          console.log('stderr: ');
+          console.log('stderr from creating .wskdeploy props:');
           console.log(stderr);
-          reject(stderr);
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         }
         resolve(data);
       }
@@ -113,10 +113,12 @@ function main(params) {
           reject(err);
         }
         if (stdout) {
-          console.log('stdout: ');
+          console.log('stdout from wskDeploy:');
           console.log(stdout);
           console.log('type');
           console.log(typeof stdout);
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+
 
           if (typeof stdout === 'string') {
             try {
@@ -135,49 +137,16 @@ function main(params) {
           }
         }
         if (stderr) {
-          console.log('stderr: ');
+          console.log('stderr from wskDeploy:');
           console.log(stderr);
-          reject(stderr);
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         }
-        resolve(data);
+        resolve({
+          status: 'success',
+          success: true,
+        });
       });
     })
-  })
-  .then((data) => {
-    console.log('Performing LS')
-    command = `ls`;
-
-    return new Promise(function(resolve, reject) {
-      exec(command , { cwd: __dirname }, (err, stdout, stderr) => {
-        if (err) {
-          console.log('Error running `ls`: ', err);
-          reject(err);
-        }
-        console.log('ls result is: ')
-        if (stdout) {
-          console.log('stdout: ');
-          console.log(stdout);
-        }
-        if (stderr) {
-          console.log('stderr: ');
-          console.log(stderr);
-          reject(stderr);
-        }
-        resolve(data);
-      });
-    })
-  })
-  .then((data) => {
-    return {
-      msg: data
-    }
-  })
-  .catch((err) => {
-    console.log('ERROR:')
-    console.log(err)
-    return {
-      msg: err
-    }
   })
 }
 
