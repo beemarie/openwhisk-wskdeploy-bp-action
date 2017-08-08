@@ -81,6 +81,7 @@ function main(params) {
         if (stderr) {
           console.log('stderr: ');
           console.log(stderr);
+          reject(stderr);
         }
         resolve(data);
       }
@@ -136,6 +137,7 @@ function main(params) {
         if (stderr) {
           console.log('stderr: ');
           console.log(stderr);
+          reject(stderr);
         }
         resolve(data);
       });
@@ -159,6 +161,7 @@ function main(params) {
         if (stderr) {
           console.log('stderr: ');
           console.log(stderr);
+          reject(stderr);
         }
         resolve(data);
       });
