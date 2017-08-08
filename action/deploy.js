@@ -103,7 +103,7 @@ function main(params) {
     }
 
     // Send 'y' to the wskdeploy command so it will actually run the deployment
-    command = `printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml`;
+    command = `printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml -v`;
 
     return new Promise(function(resolve, reject) {
       exec(command, execOptions, (err, stdout, stderr) => {
