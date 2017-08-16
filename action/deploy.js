@@ -65,7 +65,7 @@ function main(params) {
     // Create a .wskprops in the root for wskdeploy to reference
     command = `echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops`;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
         if (err) {
           console.log('Error creating .wskdeploy props', err);
@@ -76,16 +76,53 @@ function main(params) {
           console.log(stdout);
           console.log('type');
           console.log(typeof stdout);
-          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         }
         if (stderr) {
           console.log('stderr from creating .wskdeploy props:');
           console.log(stderr);
-          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         }
         resolve(data);
-      }
-    )
+      });
+    });
+  })
+  .then((data) => {
+    const {
+      repoDir,
+      envData,
+    } = data;
+
+    const execOptions = {
+      cwd: `${repoDir}/blueprint`,
+    };
+
+    if (envData) {
+      execOptions.env = envData;
+    }
+
+    console.log(`Running manifest_replace.sh to build manifest.yaml`);
+    command = `sh manifest_replace.sh`;
+
+    return new Promise((resolve, reject) => {
+      exec(command, execOptions, (err, stdout, stderr) => {
+        if (err) {
+          console.log(`Error running ${command}: ${err}`);
+          reject(err);
+        }
+        if (stdout) {
+          console.log(`stdout from ${command}`);
+          console.log(stdout);
+          console.log(`type: ${typeof stdout}`);
+          console.log(`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`);
+        }
+        if (stderr) {
+          console.log(`stderror from ${command}:`);
+          console.log(stderr);
+          console.log(`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`);
+        }
+        resolve(data);
+      });
     });
   })
   .then((data) => {
