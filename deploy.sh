@@ -8,8 +8,8 @@ OW_ACTION_NAME=${OW_ACTION_NAME:="clone-and-wskdeploy"}
 ACTION_ZIP=${2:-action.zip}
 OW_ACTION_DOCKER_IMAGE=${OW_ACTION_DOCKER_IMAGE:=$3}
 OW_ACTION_DOCKER_IMAGE=${OW_ACTION_DOCKER_IMAGE:="zachschultz/nodejs6action-git"}
-OW_HOST=${OW_HOST:=`wsk property get --apihost | awk '{printf $4}'`}
-OW_AUTH=${OW_AUTH:=`wsk property get --auth | awk '{printf $3}'`}
+OW_HOST=${OW_HOST:=`bx wsk property get --apihost | awk '{printf $4}'`}
+OW_AUTH=${OW_AUTH:=`bx wsk property get --auth | awk '{printf $3}'`}
 
 # Create action zip with source code
 if [ ${ACTION_ZIP} = "action.zip" ]; then

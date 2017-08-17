@@ -16,8 +16,11 @@ function main(params) {
 
     const remote = remoteOrError;
 
-    // Grab optional envData for wskdeploy
-    const { envData } = params;
+    // Grab optional envData and deployPath params for wskdeploy
+    const {
+      envData,
+      manifestPath,
+    } = params;
 
     // Grab wsp api host and auth from params, or process.env
     const { wskApiHost, wskAuth } = getWskApiAuth(params);
@@ -39,6 +42,7 @@ function main(params) {
               }
               resolve({
                 repoDir: localDirName,
+                manifestPath,
                 wskAuth,
                 wskApiHost,
                 envData,
@@ -48,6 +52,7 @@ function main(params) {
           // The directory exists already, start wskdeploy chain as normal
           resolve({
             repoDir: localDirName,
+            manifestPath,
             wskAuth,
             wskApiHost,
             envData,
@@ -64,7 +69,6 @@ function main(params) {
 
     // Create a .wskprops in the root for wskdeploy to reference
     command = `echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops`;
-
     return new Promise((resolve, reject) => {
       exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
         if (err) {
@@ -89,50 +93,14 @@ function main(params) {
   })
   .then((data) => {
     const {
-      repoDir,
-      envData,
-    } = data;
-
-    const execOptions = {
-      cwd: `${repoDir}/blueprint`,
-    };
-
-    if (envData) {
-      execOptions.env = envData;
-    }
-
-    console.log(`Running manifest_replace.sh to build manifest.yaml`);
-    command = `sh manifest_replace.sh`;
-
-    return new Promise((resolve, reject) => {
-      exec(command, execOptions, (err, stdout, stderr) => {
-        if (err) {
-          console.log(`Error running ${command}: ${err}`);
-          reject(err);
-        }
-        if (stdout) {
-          console.log(`stdout from ${command}`);
-          console.log(stdout);
-          console.log(`type: ${typeof stdout}`);
-          console.log(`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`);
-        }
-        if (stderr) {
-          console.log(`stderror from ${command}:`);
-          console.log(stderr);
-          console.log(`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`);
-        }
-        resolve(data);
-      });
-    });
-  })
-  .then((data) => {
-    const {
+      manifestPath,
       repoDir,
       envData
     } = data;
 
+    // Set the cwd of the command to be where the manifest/actions live
     const execOptions = {
-      cwd: __dirname,
+      cwd: `${repoDir}/${manifestPath}`,
     };
 
     // If we were passed environment data (Cloudant bindings, etc.) add it to the options for `exec`
@@ -141,7 +109,7 @@ function main(params) {
     }
 
     // Send 'y' to the wskdeploy command so it will actually run the deployment
-    command = `printf 'y' | ./wskdeploy -m ${repoDir}/blueprint/manifest.yaml -v`;
+    command = `printf 'y' | ${__dirname}/wskdeploy -v`;
 
     return new Promise(function(resolve, reject) {
       exec(command, execOptions, (err, stdout, stderr) => {
@@ -178,6 +146,8 @@ function main(params) {
           console.log(stderr);
           console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         }
+
+        console.log('Finished! Resolving now')
         resolve({
           status: 'success',
           success: true,
