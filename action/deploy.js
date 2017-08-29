@@ -69,48 +69,42 @@ function main(params) {
       });
   })
   // @TODO: Uncomment and fix when we figure out the new way to create a .wskprops file
-  // .then((data) => {
-  //   console.log('Creating config file for wskdeploy');
-  //   const {
-  //     wskAuth,
-  //     wskApiHost,
-  //   } = data;
-  //
-  //
-  //   console.log('wskAuth: ' + wskAuth);
-  //   console.log('wskApiHost: ' + wskApiHost);
-  //   console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  //   // Create a .wskprops in the root for wskdeploy to reference
-  //   command = `echo "auth:${wskAuth}\napihost:${wskApiHost}\nnamespace:_" > .wskdeploy.yaml`;
-  //   return new Promise((resolve, reject) => {
-  //     exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
-  //       if (err) {
-  //         console.log('Error creating .wskdeploy props', err);
-  //         reject(err);
-  //       }
-  //       if (stdout) {
-  //         console.log('stdout from creating .wskdeploy props:');
-  //         console.log(stdout);
-  //         console.log('type');
-  //         console.log(typeof stdout);
-  //         console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  //       }
-  //       if (stderr) {
-  //         console.log('stderr from creating .wskdeploy.yaml props:');
-  //         console.log(stderr);
-  //         console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-  //       }
-  //       resolve(data);
-  //     });
-  //   });
-  // })
+  .then((data) => {
+    console.log('Creating config file for wskdeploy');
+    const {
+      wskAuth,
+      wskApiHost,
+    } = data;
+
+    // Create a .wskprops in the root for wskdeploy to reference
+    command = `echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops`;
+    return new Promise((resolve, reject) => {
+      exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
+        if (err) {
+          console.log('Error creating .wskdeploy props', err);
+          reject(err);
+        }
+        if (stdout) {
+          console.log('stdout from creating .wskdeploy props:');
+          console.log(stdout);
+          console.log('type');
+          console.log(typeof stdout);
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+        }
+        if (stderr) {
+          console.log('stderr from creating .wskdeploy.yaml props:');
+          console.log(stderr);
+          console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+        }
+        resolve(data);
+      });
+    });
+  })
   .then((data) => {
     const {
       manifestPath,
       repoDir,
       envData,
-      wskAuth,
-      wskApiHost,
     } = data;
 
     // Set the cwd of the command to be where the manifest/actions live
@@ -124,7 +118,7 @@ function main(params) {
     }
 
     // Send 'y' to the wskdeploy command so it will actually run the deployment
-    command = `printf 'y' | ${__dirname}/wskdeploy -v --auth ${wskAuth} --apihost ${wskApiHost}`;
+    command = `printf 'y' | ${__dirname}/wskdeploy -v --config /root/.wskprops`;
 
     return new Promise(function(resolve, reject) {
       exec(command, execOptions, (err, stdout, stderr) => {
