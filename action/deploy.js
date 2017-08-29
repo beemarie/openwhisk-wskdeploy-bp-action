@@ -49,14 +49,22 @@ function main(params) {
               });
             });
         } else {
-          // The directory exists already, start wskdeploy chain as normal
-          resolve({
-            repoDir: localDirName,
-            manifestPath,
-            wskAuth,
-            wskApiHost,
-            envData,
-          });
+          // The directory exists already, check if there is anything new
+          //  and pull if so
+          return git(localDirName)
+            .pull((err, update) => {
+              if (err) {
+                console.log('Error pulling most recent data ', err);
+                reject(err);
+              }
+              resolve({
+                repoDir: localDirName,
+                manifestPath,
+                wskAuth,
+                wskApiHost,
+                envData,
+              });
+            });
         }
       });
   })
