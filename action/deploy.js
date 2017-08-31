@@ -43,6 +43,7 @@ function main(params) {
               resolve({
                 repoDir: localDirName,
                 manifestPath,
+                manifestFileName: 'manifest.yaml',
                 wskAuth,
                 wskApiHost,
                 envData,
@@ -60,6 +61,7 @@ function main(params) {
               resolve({
                 repoDir: localDirName,
                 manifestPath,
+                manifestFileName: 'manifest.yaml',
                 wskAuth,
                 wskApiHost,
                 envData,
@@ -78,6 +80,7 @@ function main(params) {
 
     // Create a .wskprops in the root for wskdeploy to reference
     command = `echo "AUTH=${wskAuth}\nAPIHOST=${wskApiHost}\nNAMESPACE=_" > .wskprops`;
+
     return new Promise((resolve, reject) => {
       exec(command, { cwd: `/root/` }, (err, stdout, stderr) => {
         if (err) {
@@ -100,9 +103,60 @@ function main(params) {
       });
     });
   })
+  .then(data => {
+    const {
+      manifestPath,
+      repoDir,
+      envData,
+      manifestFileName
+    } = data;
+
+    return new Promise(function(resolve, reject) {
+      // Check if we need to rename the package in the manifest.yaml
+      if (envData.PACKAGE_NAME) {
+        const yaml = require('js-yaml');
+
+        fs.readFile(`${repoDir}/${manifestPath}/${manifestFileName}`, (err, manifestFileData) => {
+          if (err) {
+            console.log(`Error loading ${manifestFileName} to edit the package name:`);
+            reject(err);
+          }
+          
+          try {
+            // Load the manifest.yaml content and overwrite the name
+            let manifestYamlJSON = yaml.safeLoad(manifestFileData);
+            manifestYamlJSON.package.name = envData.PACKAGE_NAME;
+
+            fs.writeFile(`${repoDir}/${manifestPath}/manifest-changed-name.yaml`, yaml.safeDump(manifestYamlJSON), err => {
+              if (err) {
+                console.log('Error saving new manifest.yaml file');
+                console.log(err);
+                reject(err);
+              }
+
+              // Change the manifestFileName so we read the updated manifest
+              //  This helps in the case where one user wants to use a changed name
+              //  and then wants to use the normal name, but the invoker isn't fresh
+              //  and would accidentally use the overwritten manifest with the new name
+              data.manifestFileName = 'manifest-changed-name.yaml';
+              resolve(data);
+            });
+          } catch (e) {
+            console.log('Error converting manifest.yaml to JSON');
+            console.log(e);
+            reject(e);
+          }
+        });
+      } else {
+        // Not trying to rename package, continue as normal
+        resolve(data);
+      }
+    });
+  })
   .then((data) => {
     const {
       manifestPath,
+      manifestFileName,
       repoDir,
       envData,
     } = data;
@@ -118,7 +172,7 @@ function main(params) {
     }
 
     // Send 'y' to the wskdeploy command so it will actually run the deployment
-    command = `printf 'y' | ${__dirname}/wskdeploy -v --config /root/.wskprops`;
+    command = `printf 'y' | ${__dirname}/wskdeploy -v -m ${manifestFileName} --config /root/.wskprops`;
 
     return new Promise(function(resolve, reject) {
       exec(command, execOptions, (err, stdout, stderr) => {
