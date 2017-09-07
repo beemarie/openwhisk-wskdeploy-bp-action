@@ -121,7 +121,7 @@ function main(params) {
             console.log(`Error loading ${manifestFileName} to edit the package name:`);
             reject(err);
           }
-          
+
           try {
             // Load the manifest.yaml content and overwrite the name
             let manifestYamlJSON = yaml.safeLoad(manifestFileData);
@@ -292,6 +292,8 @@ function getWskApiAuth(params) {
   if (!wskAuth) {
     wskAuth = process.env.__OW_API_KEY;
   }
+
+  console.log(`Using wskApiHost: ${wskApiHost} and wskAuth: ${wskAuth}`);
 
   return {
     wskApiHost,
