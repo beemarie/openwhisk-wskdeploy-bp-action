@@ -33,7 +33,7 @@ function main(params) {
     return checkIfDirExists(localDirName)
       .then((res) => {
         // The directory does not exist, clone BP from Github
-        if (!res.skipClone) {
+        if (!res.dirExists) {
           return git()
             .clone(remote, localDirName, (err) => {
               if (err) {
@@ -95,7 +95,7 @@ function main(params) {
           console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         }
         if (stderr) {
-          console.log('stderr from creating .wskdeploy.yaml props:');
+          console.log('stderr from creating .wskdeploy props:');
           console.log(stderr);
           console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         }
@@ -232,7 +232,7 @@ function checkIfDirExists(dirname) {
         if (err.code === 'ENOENT') {
           console.log(`Directory ${dirname} does not exist`);
           resolve({
-            skipClone: false
+            dirExists: false
           });
         }
         else {
@@ -244,7 +244,7 @@ function checkIfDirExists(dirname) {
       // Directory does exist, skip git clone
       // @TODO: Add optimization/caching here if repo exists on invoker already
       resolve({
-        skipClone: true
+        dirExists: true
       });
     });
   });
